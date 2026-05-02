@@ -44,6 +44,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -e
           DATE=$(date '+%Y-%m-%d')
           COUNT="${{ steps.diff.outputs.commit_count }}"
           CHANGELOG="${{ steps.diff.outputs.changelog }}"
