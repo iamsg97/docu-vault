@@ -1,0 +1,22 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/scripts/check-pending-docs.sh 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(bash .claude/scripts/check-pending-docs.sh)",
+      "Bash(find apps lambdas packages -type f*)",
+      "Bash(find docs -type f*)"
+    ]
+  }
+}
