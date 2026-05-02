@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+.turbo/
+*.tsbuildinfo
+
+# Environment — never commit real credentials
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Logs
+*.log
+pnpm-debug.log*
+
+# Test coverage
+coverage/
+
+# Next.js (web app)
+.next/
+out/
+
+# Accidental tsc output in src/ directories (outDir should always be dist/)
+packages/*/src/**/*.js
+packages/*/src/**/*.js.map
+
+# Husky
+.husky/_
