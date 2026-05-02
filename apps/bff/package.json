@@ -1,0 +1,39 @@
+{
+  "name": "bff",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc",
+    "start": "node dist/main.js",
+    "lint": "eslint src --ext .ts",
+    "test": "jest --passWithNoTests",
+    "test:e2e": "jest --config jest.e2e.config.js --passWithNoTests",
+    "clean": "rm -rf dist coverage"
+  },
+  "dependencies": {
+    "@docuvault/shared-types": "workspace:*",
+    "@docuvault/shared-utils": "workspace:*",
+    "axios": "^1.7.9",
+    "express": "^4.21.2",
+    "pino-http": "^10.3.0",
+    "uuid": "^11.0.3",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@docuvault/eslint-config": "workspace:*",
+    "@types/express": "^5.0.0",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^20.17.10",
+    "@types/supertest": "^6.0.2",
+    "@types/uuid": "^10.0.0",
+    "eslint": "^8.57.1",
+    "jest": "^29.7.0",
+    "pino-pretty": "^13.0.0",
+    "supertest": "^7.0.0",
+    "ts-jest": "^29.2.5",
+    "tsx": "^4.19.2",
+    "typescript": "*"
+  }
+}
