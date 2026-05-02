@@ -43,11 +43,11 @@ jobs:
         if: steps.diff.outputs.has_changes == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CHANGELOG: ${{ steps.diff.outputs.changelog }}
+          COUNT: ${{ steps.diff.outputs.commit_count }}
         run: |
           set -e
           DATE=$(date '+%Y-%m-%d')
-          COUNT="${{ steps.diff.outputs.commit_count }}"
-          CHANGELOG="${{ steps.diff.outputs.changelog }}"
           OWNER="${{ github.repository_owner }}"
 
           BODY="## Daily Release — $DATE
