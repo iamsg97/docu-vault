@@ -1,0 +1,189 @@
+name: CI
+
+# Triggers on every push to every branch, and on every pull request.
+# This ensures the pipeline runs both on direct pushes and when a PR is
+# opened or updated — required for branch protection checks to apply.
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+
+# Cancel in-progress runs for the same workflow + event + ref combination
+# so a new push to a branch does not queue behind a stale run.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Optional: set TURBO_TOKEN and TURBO_TEAM secrets in your GitHub repository
+# to enable Turborepo Remote Caching (via Vercel). Without these secrets the
+# workflow is fully functional — turbo simply skips the remote cache layer.
+env:
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # LINT — runs ESLint across every package and app in the Turborepo.
+  # Turbo's task graph ensures shared packages are compiled before the apps
+  # that depend on them (respecting "dependsOn": ["^build"] in turbo.json).
+  # ---------------------------------------------------------------------------
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Reads the `packageManager` field from the root package.json
+      # (pnpm@9.15.0) automatically — no version input needed.
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      # Cache Turbo's local task output so re-runs are fast on the same SHA.
+      - name: Restore Turborepo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-lint-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            turbo-lint-${{ runner.os }}-
+
+      # --frozen-lockfile prevents the lockfile from being updated in CI,
+      # catching any mismatch between package.json and pnpm-lock.yaml early.
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint all packages and apps
+        run: pnpm turbo run lint
+
+  # ---------------------------------------------------------------------------
+  # UNIT TESTS — runs the Jest test suite for every package and app.
+  # Runs in parallel with Lint on a separate runner; neither job blocks the
+  # other. Both must succeed before Build is allowed to start.
+  # ---------------------------------------------------------------------------
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Restore Turborepo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-test-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            turbo-test-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run unit tests across all packages and apps
+        run: pnpm turbo run test
+
+      # Upload coverage directories from every package as a single artifact.
+      # `if: always()` ensures this runs even when tests fail so you can
+      # inspect partial coverage on a failing run.
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports
+          path: |
+            apps/*/coverage/
+            packages/*/coverage/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  # ---------------------------------------------------------------------------
+  # BUILD — compiles every package and app in the Turborepo.
+  # Only runs after BOTH Lint and Unit Tests succeed. If either upstream job
+  # fails this job is skipped, and the `ci` summary job reports failure.
+  # ---------------------------------------------------------------------------
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Restore Turborepo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-build-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            turbo-build-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build all packages and apps
+        run: pnpm turbo run build
+
+  # ---------------------------------------------------------------------------
+  # CI (summary) — the single status check to add to branch protection rules.
+  #
+  # Branch protection requires listing individual job names as required status
+  # checks. This gate job acts as a single, stable name ("CI") that you can
+  # configure once and never have to update as new jobs are added.
+  #
+  # `if: always()` ensures this job runs even when upstream jobs are skipped
+  # or cancelled, so it can always report a definitive pass/fail.
+  # ---------------------------------------------------------------------------
+  ci:
+    name: CI
+    needs: [lint, test, build]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: All checks passed
+        run: |
+          lint="${{ needs.lint.result }}"
+          test="${{ needs.test.result }}"
+          build="${{ needs.build.result }}"
+
+          echo "lint=$lint  test=$test  build=$build"
+
+          for result in "$lint" "$test" "$build"; do
+            if [[ "$result" != "success" ]]; then
+              echo "One or more CI jobs did not succeed. Blocking merge."
+              exit 1
+            fi
+          done
+
+          echo "All CI jobs passed."
