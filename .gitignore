@@ -38,3 +38,6 @@ packages/*/src/**/*.js.map
 
 # Husky
 .husky/_
+
+# Local Claude overrides — personal session rules, not project conventions
+CLAUDE.local.md
