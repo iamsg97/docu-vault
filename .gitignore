@@ -41,3 +41,4 @@ packages/*/src/**/*.js.map
 
 # Local Claude overrides — personal session rules, not project conventions
 CLAUDE.local.md
+.claude/settings.local.json
