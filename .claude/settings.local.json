@@ -3,5 +3,6 @@
     "allow": [
       "Bash(gh run *)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": ["playwright"]
 }
