@@ -16,7 +16,8 @@
     "allow": [
       "Bash(bash .claude/scripts/check-pending-docs.sh)",
       "Bash(find apps lambdas packages -type f*)",
-      "Bash(find docs -type f*)"
+      "Bash(find docs -type f*)",
+      "Bash(ls docs/learnings/sessions*)"
     ]
   }
 }
