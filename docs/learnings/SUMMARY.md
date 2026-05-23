@@ -11,7 +11,7 @@
 These decisions affect all implementation work and must not be re-litigated without explicit user instruction:
 
 | Decision | Choice | Constraint |
-|----------|--------|-----------|
+| -------- | ------ | ---------- |
 | Container orchestration | ECS EC2 launch type | EKS = $73/month control plane cost |
 | Vector search | pgvector in PostgreSQL | Same DB, no extra service, $0 cost |
 | File delivery | S3 presigned URLs, never stream through backend | Bandwidth + server load |
@@ -27,7 +27,7 @@ These decisions affect all implementation work and must not be re-litigated with
 
 > New entries are prepended below by `/learn` and `/feature-complete`. Newest section first.
 
-*(No sessions logged yet — run `/learn` after your first development session to populate this file.)*
+- [AWS Terraform Infrastructure](sessions/2026-05-23-aws-terraform-infrastructure.md) — 14-module IaC for ECS, RDS, DynamoDB, S3, SQS, SNS, Cognito, CloudFront across dev/preprod/prod
 
 ---
 

@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(gh run *)"
+      "Bash(gh run *)",
+      "Bash(printf 'exports.handler = async \\(\\) => \\({ statusCode: 200 }\\);\\\\n')",
+      "Bash(zip placeholder.zip index.js)",
+      "Bash(rm index.js)",
+      "Bash(python3 -c \"import zipfile; z = zipfile.ZipFile\\('placeholder.zip', 'w'\\); z.write\\('index.js'\\); z.close\\(\\)\")"
     ]
   }
 }
